@@ -1,0 +1,181 @@
+@use '@angular/material' as mat;
+
+// Custom CSS Variables
+:root {
+  --primary-color: #3f51b5;
+  --primary-color-rgb: 63, 81, 181;
+  --accent-color: #ff4081;
+  --accent-color-rgb: 255, 64, 129;
+  --warn-color: #f44336;
+  --warn-color-rgb: 244, 67, 54;
+  --primary-lighter: #c5cae9;
+  --background-color: #ffffff;
+  --background-color-rgb: 255, 255, 255;
+  --text-color: rgba(0, 0, 0, 0.87);
+  --text-color-rgb: 0, 0, 0;
+  --surface-color: #ffffff;
+  --surface-color-rgb: 255, 255, 255;
+}
+
+// Dark theme variables
+.dark-theme {
+  --primary-color: #90caf9;
+  --primary-color-rgb: 144, 202, 249;
+  --accent-color: #ffd740;
+  --accent-color-rgb: 255, 215, 64;
+  --warn-color: #ff5722;
+  --warn-color-rgb: 255, 87, 34;
+  --primary-lighter: #bbdefb;
+  --background-color: #303030;
+  --background-color-rgb: 48, 48, 48;
+  --text-color: #ffffff;
+  --text-color-rgb: 255, 255, 255;
+  --surface-color: #424242;
+  --surface-color-rgb: 66, 66, 66;
+
+  // Override Material Dark Theme styles
+  background-color: var(--background-color);
+  color: var(--text-color);
+
+  // Toolbar overrides
+  .mat-toolbar.mat-primary {
+    background-color: var(--surface-color);
+    color: var(--text-color);
+
+    .mat-icon-button {
+      color: var(--text-color);
+    }
+  }
+
+  // Sidenav overrides
+  .mat-sidenav {
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .mat-drawer-container {
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+
+  // List items
+  .mat-mdc-list-item {
+    color: var(--text-color) !important;
+    
+    .mdc-list-item__primary-text {
+      color: var(--text-color) !important;
+    }
+    
+    .mat-icon {
+      color: var(--text-color) !important;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+    }
+  }
+
+  // Form fields
+  .mat-mdc-form-field {
+    .mdc-text-field {
+      background-color: var(--surface-color) !important;
+    }
+
+    .mdc-floating-label,
+    .mdc-text-field__input {
+      color: var(--text-color) !important;
+    }
+
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled) {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: rgba(255, 255, 255, 0.38) !important;
+      }
+    }
+
+    &.mat-focused {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--primary-color) !important;
+      }
+    }
+  }
+
+  // Cards
+  .mat-mdc-card {
+    background-color: var(--surface-color);
+    color: var(--text-color);
+  }
+
+  // Buttons
+  .mat-mdc-raised-button.mat-primary {
+    background-color: var(--primary-color);
+    color: black;
+  }
+
+  .mat-mdc-raised-button.mat-accent {
+    background-color: var(--accent-color);
+    color: black;
+  }
+
+  // Dialog
+  .mat-mdc-dialog-container {
+    background-color: var(--surface-color);
+    color: var(--text-color);
+  }
+
+  // Table
+  .mat-mdc-table {
+    background-color: var(--surface-color);
+    
+    .mat-mdc-header-cell,
+    .mat-mdc-cell {
+      color: var(--text-color);
+    }
+  }
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+// Additional utility classes
+.mat-mdc-card {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+}
+
+.mat-drawer-container {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+// Override specific component styles
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--primary-color);
+}
+
+.mat-mdc-raised-button.mat-accent {
+  background-color: var(--accent-color);
+}
+
+.mat-mdc-raised-button.mat-warn {
+  background-color: var(--warn-color);
+}
+
+.active-link {
+  background-color: var(--primary-lighter) !important;
+  color: var(--primary-color) !important;
+}
+
+.error-snackbar {
+  background-color: #f44336;
+  color: white;
+}
