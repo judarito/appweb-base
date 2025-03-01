@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, from as rxFrom } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 import { SupabaseService } from './supabase.service';
-import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface Role {
   id: number;
@@ -8,79 +9,98 @@ export interface Role {
   description: string;
 }
 
+export interface PagedResult<T> {
+  items: T[];
+  total: number;
+  pageIndex: number;
+  pageSize: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class RolesService {
-  private roles = new BehaviorSubject<Role[]>([]);
-  roles$ = this.roles.asObservable();
+  private rolesSubject = new BehaviorSubject<PagedResult<Role>>({
+    items: [],
+    total: 0,
+    pageIndex: 0,
+    pageSize: 5
+  });
+
+  roles$ = this.rolesSubject.asObservable();
 
   constructor(private supabaseService: SupabaseService) {}
 
-  async getRoles(): Promise<void> {
-    try {
-      const { data, error } = await this.supabaseService.supabaseClient
-        .from('roles')
-        .select('*')
-        .order('id', { ascending: true });
+  loadRoles(pageIndex: number = 0, pageSize: number = 5): Observable<void> {
+    const startIndex = pageIndex * pageSize;
+    const endIndex = startIndex + pageSize - 1;
 
-      if (error) throw error;
-      this.roles.next(data || []);
-    } catch (error) {
-      console.error('Error fetching roles:', error);
-      this.roles.next([]);
-      throw error;
-    }
+    return rxFrom(
+      this.supabaseService.supabaseClient
+        .from('roles')
+        .select('*', { count: 'exact' })
+        .range(startIndex, endIndex)
+        .order('id', { ascending: true })
+    ).pipe(
+      tap(({ data, error, count }) => {
+        if (error) throw error;
+        
+        this.rolesSubject.next({
+          items: data || [],
+          total: count || 0,
+          pageIndex,
+          pageSize
+        });
+      }),
+      map(() => void 0)
+    );
   }
 
-  async createRole(role: Omit<Role, 'id'>): Promise<Role[]> {
-    try {
-      const { data, error } = await this.supabaseService.supabaseClient
+  createRole(role: Omit<Role, 'id'>): Observable<void> {
+    return rxFrom(
+      this.supabaseService.supabaseClient
         .from('roles')
         .insert([role])
         .select()
-        .single();
-
-      if (error) throw error;
-      await this.getRoles();
-      return [data];
-    } catch (error) {
-      console.error('Error creating role:', error);
-      throw error;
-    }
+        .single()
+    ).pipe(
+      tap(({ error }) => {
+        if (error) throw error;
+        this.loadRoles(this.rolesSubject.value.pageIndex, this.rolesSubject.value.pageSize).subscribe();
+      }),
+      map(() => void 0)
+    );
   }
 
-  async updateRole(id: number, role: Partial<Role>): Promise<Role[]> {
-    try {
-      const { data, error } = await this.supabaseService.supabaseClient
+  updateRole(id: number, role: Partial<Role>): Observable<void> {
+    return rxFrom(
+      this.supabaseService.supabaseClient
         .from('roles')
         .update(role)
         .eq('id', id)
         .select()
-        .single();
-
-      if (error) throw error;
-      await this.getRoles();
-      return [data];
-    } catch (error) {
-      console.error('Error updating role:', error);
-      throw error;
-    }
+        .single()
+    ).pipe(
+      tap(({ error }) => {
+        if (error) throw error;
+        this.loadRoles(this.rolesSubject.value.pageIndex, this.rolesSubject.value.pageSize).subscribe();
+      }),
+      map(() => void 0)
+    );
   }
 
-  async deleteRole(id: number): Promise<Role[]> {
-    try {
-      const { error } = await this.supabaseService.supabaseClient
+  deleteRole(id: number): Observable<void> {
+    return rxFrom(
+      this.supabaseService.supabaseClient
         .from('roles')
         .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      await this.getRoles();
-      return [];
-    } catch (error) {
-      console.error('Error deleting role:', error);
-      throw error;
-    }
+        .eq('id', id)
+    ).pipe(
+      tap(({ error }) => {
+        if (error) throw error;
+        this.loadRoles(this.rolesSubject.value.pageIndex, this.rolesSubject.value.pageSize).subscribe();
+      }),
+      map(() => void 0)
+    );
   }
 }

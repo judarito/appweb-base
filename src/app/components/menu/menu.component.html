@@ -1,0 +1,16 @@
+<mat-nav-list class="nav-list">
+  <a mat-list-item *ngFor="let item of menuItems"
+     [routerLink]="item.route"
+     routerLinkActive="active"
+     [routerLinkActiveOptions]="item.route === '/app' ? {exact: true} : {exact: false}"
+     (click)="navItemClick.emit()">
+    <mat-icon matListItemIcon>{{item.icon}}</mat-icon>
+    <span matListItemTitle>{{item.label}}</span>
+  </a>
+  
+  <mat-divider></mat-divider>
+  <a mat-list-item (click)="logoutClick.emit()" class="logout-item">
+    <mat-icon matListItemIcon>exit_to_app</mat-icon>
+    <span matListItemTitle>Logout</span>
+  </a>
+</mat-nav-list>

@@ -1,0 +1,12 @@
+<div class="sidebar-content">
+  <div class="user-info">
+    <div class="user-name">User Name</div>
+    <div class="user-email">{{userEmail}}</div>
+  </div>
+  
+  <app-menu 
+    [menuItems]="menuItems"
+    (navItemClick)="navItemClick.emit()"
+    (logoutClick)="logoutClick.emit()">
+  </app-menu>
+</div>

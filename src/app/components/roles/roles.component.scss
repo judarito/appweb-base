@@ -1,0 +1,104 @@
+.roles-container {
+  padding: 20px;
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background: transparent;
+    flex-wrap: wrap;
+    gap: 16px;
+    
+    h2 {
+      margin: 0;
+      color: var(--mat-toolbar-title-text-color);
+    }
+  }
+
+  .mat-table {
+    width: 100%;
+  }
+
+  .mat-column-actions {
+    width: 100px;
+    text-align: center;
+  }
+}
+
+// Estilos para el diálogo
+::ng-deep {
+  .mat-mdc-dialog-container {
+    .mdc-dialog__surface {
+      width: 100%;
+      max-width: 500px;
+      margin: 16px;
+      
+      @media (max-width: 599px) {
+        margin: 16px;
+        width: calc(100% - 32px);
+      }
+
+      .mat-mdc-dialog-title {
+        color: var(--mat-toolbar-title-text-color);
+      }
+
+      .mat-mdc-button[disabled] {
+        color: var(--mat-toolbar-disabled-button-text-color);
+      }
+
+      .mat-mdc-dialog-actions {
+        padding: 16px;
+        button {
+          &[disabled] {
+            color: var(--mat-toolbar-disabled-button-text-color) !important;
+          }
+        }
+      }
+    }
+  }
+
+  .dark-mode {
+    .mat-mdc-dialog-container {
+      .mdc-dialog__surface {
+        color: var(--mat-dialog-container-text-color);
+      }
+    }
+  }
+}
+
+mat-dialog-content {
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    
+    mat-form-field {
+      width: 100%;
+    }
+
+    @media (max-width: 599px) {
+      padding: 16px;
+      min-width: unset;
+    }
+  }
+}
+
+// Estilos responsivos para la tabla
+@media (max-width: 599px) {
+  .roles-container {
+    padding: 16px;
+
+    .mat-table {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mat-column-actions {
+      width: auto;
+      min-width: 100px;
+    }
+  }
+}

@@ -1,0 +1,20 @@
+.toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 64px;
+  
+  &.mobile {
+    height: 56px;
+  }
+
+  .mat-icon {
+    color: inherit;
+  }
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}

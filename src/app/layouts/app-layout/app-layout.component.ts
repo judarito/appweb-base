@@ -1,15 +1,12 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatDividerModule } from '@angular/material/divider';
 import { ThemeService } from '../../services/theme.service';
 import { Observable } from 'rxjs';
 import { LoginService } from '../../services/login.service';
+import { HeaderComponent } from '../../components/header/header.component';
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-app-layout',
@@ -17,52 +14,29 @@ import { LoginService } from '../../services/login.service';
   imports: [
     CommonModule,
     RouterModule,
-    MatToolbarModule,
-    MatButtonModule,
     MatSidenavModule,
-    MatIconModule,
-    MatListModule,
-    MatDividerModule
+    HeaderComponent,
+    SidebarComponent
   ],
   template: `
-    <div class="app-container" [class.dark-theme]="isDarkMode$ | async">
-      <mat-toolbar class="toolbar">
-        <button mat-icon-button (click)="toggleSidenav()">
-          <mat-icon>menu</mat-icon>
-        </button>
-        <span>My App</span>
-        <span class="toolbar-spacer"></span>
-        <button mat-icon-button (click)="toggleTheme()">
-          <mat-icon>{{ (isDarkMode$ | async) ? 'light_mode' : 'dark_mode' }}</mat-icon>
-        </button>
-        <button mat-icon-button (click)="logout()" matTooltip="Logout">
-          <mat-icon>logout</mat-icon>
-        </button>
-      </mat-toolbar>
+    <div class="app-container" [class.dark]="isDarkMode$ | async">
+      <app-header
+        [isDarkMode$]="isDarkMode$"
+        (toggleSidenavEvent)="toggleSidenav()"
+        (toggleThemeEvent)="toggleTheme()"
+        (logoutEvent)="logout()">
+      </app-header>
 
       <mat-sidenav-container class="sidenav-container">
         <mat-sidenav #sidenav [mode]="isMobile ? 'over' : 'side'"
-                     [opened]="!isMobile && isOpen" class="sidenav">
-          <div class="user-info">
-            <div class="user-name">User Name</div>
-            <div class="user-email">{{userEmail}}</div>
-          </div>
-          
-          <mat-nav-list class="nav-list">
-            <a mat-list-item *ngFor="let item of menuItems"
-               [routerLink]="item.route"
-               routerLinkActive="active"
-               (click)="onNavItemClick()">
-              <mat-icon matListItemIcon>{{item.icon}}</mat-icon>
-              <span matListItemTitle>{{item.label}}</span>
-            </a>
-            
-            <mat-divider></mat-divider>
-            <a mat-list-item (click)="logout()" class="logout-item">
-              <mat-icon matListItemIcon>exit_to_app</mat-icon>
-              <span matListItemTitle>Logout</span>
-            </a>
-          </mat-nav-list>
+                     [opened]="!isMobile && isOpen" 
+                     class="sidenav">
+          <app-sidebar
+            [userEmail]="userEmail"
+            [menuItems]="menuItems"
+            (navItemClick)="onNavItemClick()"
+            (logoutClick)="logout()">
+          </app-sidebar>
         </mat-sidenav>
 
         <mat-sidenav-content class="main-content">
@@ -74,22 +48,28 @@ import { LoginService } from '../../services/login.service';
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      height: 100%;
+    }
+
     .app-container {
       display: flex;
       flex-direction: column;
       height: 100vh;
-    }
+      background-color: var(--mat-app-background-color);
+      color: var(--mat-app-text-color);
 
-    .toolbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 2;
-      height: 64px;
-      
-      &.mobile {
-        height: 56px;
+      &.dark {
+        --mat-app-background-color: #303030;
+        --mat-app-text-color: #ffffff;
+        --mat-toolbar-container-background-color: #424242;
+        --mat-toolbar-container-text-color: #ffffff;
+        --mat-sidenav-container-background-color: #303030;
+        --mat-sidenav-container-text-color: #ffffff;
+        --primary-color: #7b1fa2;
+        --primary-lighter: rgba(123, 31, 162, 0.2);
+        --warn-color: #f44336;
       }
     }
 
@@ -103,7 +83,6 @@ import { LoginService } from '../../services/login.service';
     }
 
     .sidenav {
-      width: 260px;
       border-right: none;
       box-shadow: 2px 0 12px rgba(0,0,0,0.1);
 
@@ -111,28 +90,6 @@ import { LoginService } from '../../services/login.service';
         width: 85%;
         max-width: 300px;
       }
-    }
-
-    .user-info {
-      padding: 24px 16px;
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
-      color: white;
-    }
-
-    .user-name {
-      font-size: 16px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .user-email {
-      font-size: 14px;
-      opacity: 0.9;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .content {
@@ -146,47 +103,10 @@ import { LoginService } from '../../services/login.service';
       }
     }
 
-    .toolbar-spacer {
-      flex: 1 1 auto;
-    }
-
-    mat-nav-list {
-      padding-top: 0;
-    }
-
-    .mat-list-item {
-      margin: 4px 8px;
-      border-radius: 4px;
-      &:hover {
-        background-color: rgba(0,0,0,0.04);
-      }
-    }
-
-    .active {
-      background-color: var(--primary-lighter) !important;
-      color: var(--primary-color);
-      .mat-icon {
-        color: var(--primary-color);
-      }
-    }
-
-    .logout-item {
-      margin-top: 8px;
-      color: var(--warn-color);
-      .mat-icon {
-        color: var(--warn-color);
-      }
-    }
-
     @media (max-width: 599px) {
       .content-shifted {
         margin-left: 0;
       }
-    }
-
-    :host {
-      display: block;
-      height: 100%;
     }
   `],
 })
@@ -198,26 +118,10 @@ export class AppLayoutComponent implements OnInit {
   userEmail = 'user@example.com';
 
   menuItems = [
-    {
-      icon: 'dashboard',
-      label: 'Dashboard',
-      route: '/app'
-    },
-    {
-      icon: 'person',
-      label: 'Profile',
-      route: '/app/profile'
-    },
-    {
-      icon: 'settings',
-      label: 'Settings',
-      route: '/app/settings'
-    },
-    {
-      icon: 'manage_accounts',
-      label: 'Roles',
-      route: '/app/roles'
-    }
+    { route: '/app', icon: 'dashboard', label: 'Dashboard' },
+    { route: '/app/roles', icon: 'admin_panel_settings', label: 'Roles' },
+    { route: '/app/profile', icon: 'person', label: 'Profile' },
+    { route: '/app/settings', icon: 'settings', label: 'Settings' }
   ];
 
   constructor(
@@ -228,48 +132,28 @@ export class AppLayoutComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.checkScreenSize();
-    window.addEventListener('resize', () => this.checkScreenSize());
-  }
-
-  ngOnDestroy() {
-    window.removeEventListener('resize', () => this.checkScreenSize());
-  }
-
-  checkScreenSize() {
+    // Check if mobile based on screen width
     this.isMobile = window.innerWidth < 768;
-    if (this.isMobile) {
-      this.isOpen = false;
-    }
+    window.addEventListener('resize', () => {
+      this.isMobile = window.innerWidth < 768;
+    });
   }
 
   toggleSidenav() {
-    if (this.isMobile) {
-      this.sidenav.toggle();
-    } else {
-      this.isOpen = !this.isOpen;
-    }
+    this.sidenav.toggle();
   }
 
   toggleTheme() {
     this.themeService.toggleTheme();
   }
 
-  closeSidenav() {
-    if (this.isMobile) {
-      this.sidenav.close();
-    }
-    this.isOpen = false;
-  }
-
   onNavItemClick() {
     if (this.isMobile) {
-      this.closeSidenav();
+      this.toggleSidenav();
     }
   }
 
-  logout() {
-    this.closeSidenav();
-    this.loginService.logout();
+  async logout() {
+    await this.loginService.logout();
   }
 }

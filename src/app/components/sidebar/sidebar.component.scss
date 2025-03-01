@@ -1,0 +1,37 @@
+.sidenav {
+  width: 260px;
+  border-right: none;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+
+  &.mobile {
+    width: 85%;
+    max-width: 300px;
+  }
+}
+
+.sidebar-content {
+  width: 260px;
+  height: 100%;
+}
+
+.user-info {
+  padding: 24px 16px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  color: white;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  font-size: 14px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
