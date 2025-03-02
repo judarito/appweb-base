@@ -1,16 +1,80 @@
-<mat-nav-list class="nav-list">
-  <a mat-list-item *ngFor="let item of menuItems"
-     [routerLink]="item.route"
-     routerLinkActive="active"
-     [routerLinkActiveOptions]="item.route === '/app' ? {exact: true} : {exact: false}"
-     (click)="navItemClick.emit()">
-    <mat-icon matListItemIcon>{{item.icon}}</mat-icon>
-    <span matListItemTitle>{{item.label}}</span>
-  </a>
-  
-  <mat-divider></mat-divider>
-  <a mat-list-item (click)="logoutClick.emit()" class="logout-item">
-    <mat-icon matListItemIcon>exit_to_app</mat-icon>
-    <span matListItemTitle>Logout</span>
-  </a>
-</mat-nav-list>
+<div class="menu-container">
+  <div class="header">
+    <h2>Menu Management</h2>
+    <button mat-raised-button color="primary" (click)="openDialog()">
+      <mat-icon>add</mat-icon>
+      Add Menu Item
+    </button>
+  </div>
+
+  <app-data-table
+    [columns]="columns"
+    [data]="menus"
+    [totalItems]="totalItems"
+    [pageSize]="pageSize"
+    (onPageChange)="handlePageEvent($event)"
+    (onEdit)="openDialog($event)"
+    (onDelete)="confirmDelete($event)">
+  </app-data-table>
+</div>
+
+<ng-template #dialogTemplate>
+  <h2 mat-dialog-title>{{editingMenu ? 'Edit Menu Item' : 'Create Menu Item'}}</h2>
+  <mat-dialog-content>
+    <form [formGroup]="menuForm" class="menu-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Title</mat-label>
+        <input matInput formControlName="title" placeholder="Enter menu title">
+        <mat-error *ngIf="menuForm.get('title')?.hasError('required')">
+          Title is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Path</mat-label>
+        <input matInput formControlName="path" placeholder="Enter menu path">
+        <mat-error *ngIf="menuForm.get('path')?.hasError('required')">
+          Path is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Icon</mat-label>
+        <input matInput formControlName="icon" placeholder="Enter material icon name">
+        <mat-icon matSuffix>{{menuForm.get('icon')?.value || 'help'}}</mat-icon>
+        <mat-error *ngIf="menuForm.get('icon')?.hasError('required')">
+          Icon is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Parent Menu</mat-label>
+        <mat-select formControlName="parent_id">
+          <mat-option [value]="null">None (Top Level)</mat-option>
+          <mat-option *ngFor="let parent of parentMenus" [value]="parent.id">
+            {{parent.title}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Order</mat-label>
+        <input matInput type="number" formControlName="order" min="0">
+        <mat-error *ngIf="menuForm.get('order')?.hasError('required')">
+          Order is required
+        </mat-error>
+        <mat-error *ngIf="menuForm.get('order')?.hasError('min')">
+          Order must be 0 or greater
+        </mat-error>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="dialogRef.close()">Cancel</button>
+    <button mat-raised-button color="primary" 
+            (click)="saveMenu()" 
+            [disabled]="menuForm.invalid">
+      {{editingMenu ? 'Update' : 'Create'}}
+    </button>
+  </mat-dialog-actions>
+</ng-template>

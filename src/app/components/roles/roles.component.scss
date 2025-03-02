@@ -26,6 +26,22 @@
   }
 }
 
+.role-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 350px;
+  padding: 16px 0;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-dialog-actions {
+  padding: 16px;
+}
+
 // Estilos para el diálogo
 ::ng-deep {
   .mat-mdc-dialog-container {
@@ -67,21 +83,10 @@
   }
 }
 
-mat-dialog-content {
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
-    
-    mat-form-field {
-      width: 100%;
-    }
-
-    @media (max-width: 599px) {
-      padding: 16px;
-      min-width: unset;
-    }
+@media (max-width: 600px) {
+  .role-form {
+    min-width: unset;
+    width: 100%;
   }
 }
 

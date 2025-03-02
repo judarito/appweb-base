@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, from as rxFrom } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { Observable, from as rxFrom } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { SupabaseService } from './supabase.service';
 
-export interface Role {
+export interface Menu {
   id: number;
-  name: string;
-  description: string;
+  title: string;
+  path: string;
+  icon: string;
+  parent_id: number | null;
+  order: number;
 }
 
 export interface PagedResult<T> {
@@ -19,28 +22,19 @@ export interface PagedResult<T> {
 @Injectable({
   providedIn: 'root'
 })
-export class RolesService {
-  private rolesSubject = new BehaviorSubject<PagedResult<Role>>({
-    items: [],
-    total: 0,
-    pageIndex: 0,
-    pageSize: 5
-  });
-
-  roles$ = this.rolesSubject.asObservable();
-
+export class MenuService {
   constructor(private supabaseService: SupabaseService) {}
 
-  getRoles(pageIndex: number = 0, pageSize: number = 10): Observable<PagedResult<Role>> {
+  getMenus(pageIndex: number = 0, pageSize: number = 10): Observable<PagedResult<Menu>> {
     const startIndex = pageIndex * pageSize;
     const endIndex = startIndex + pageSize - 1;
 
     return rxFrom(
       this.supabaseService.supabaseClient
-        .from('roles')
+        .from('menus')
         .select('*', { count: 'exact' })
         .range(startIndex, endIndex)
-        .order('id', { ascending: true })
+        .order('order', { ascending: true })
     ).pipe(
       map(({ data, error, count }) => {
         if (error) throw error;
@@ -55,46 +49,61 @@ export class RolesService {
     );
   }
 
-  createRole(role: Omit<Role, 'id'>): Observable<Role> {
+  createMenu(menu: Omit<Menu, 'id'>): Observable<Menu> {
     return rxFrom(
       this.supabaseService.supabaseClient
-        .from('roles')
-        .insert([role])
+        .from('menus')
+        .insert([menu])
         .select()
         .single()
     ).pipe(
       map(({ data, error }) => {
         if (error) throw error;
-        return data as Role;
+        return data as Menu;
       })
     );
   }
 
-  updateRole(id: number, role: Partial<Role>): Observable<Role> {
+  updateMenu(id: number, menu: Partial<Menu>): Observable<Menu> {
     return rxFrom(
       this.supabaseService.supabaseClient
-        .from('roles')
-        .update(role)
+        .from('menus')
+        .update(menu)
         .eq('id', id)
         .select()
         .single()
     ).pipe(
       map(({ data, error }) => {
         if (error) throw error;
-        return data as Role;
+        return data as Menu;
       })
     );
   }
 
-  deleteRole(id: number): Observable<void> {
+  deleteMenu(id: number): Observable<void> {
     return rxFrom(
       this.supabaseService.supabaseClient
-        .from('roles')
+        .from('menus')
         .delete()
         .eq('id', id)
     ).pipe(
       map(({ error }) => {
         if (error) throw error;
+      })
+    );
+  }
+
+  getParentMenus(): Observable<Menu[]> {
+    return rxFrom(
+      this.supabaseService.supabaseClient
+        .from('menus')
+        .select('*')
+        .is('parent_id', null)
+        .order('order', { ascending: true })
+    ).pipe(
+      map(({ data, error }) => {
+        if (error) throw error;
+        return data as Menu[];
       })
     );
   }

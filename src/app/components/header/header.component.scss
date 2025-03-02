@@ -4,6 +4,9 @@
   left: 0;
   right: 0;
   z-index: 2;
+  background-color: var(--toolbar-bg-color, #ffffff);
+  color: var(--toolbar-text-color, rgba(0, 0, 0, 0.87));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   height: 64px;
   
   &.mobile {
@@ -13,6 +16,11 @@
   .mat-icon {
     color: inherit;
   }
+}
+
+:host-context(.dark) .toolbar {
+  --toolbar-bg-color: #424242;
+  --toolbar-text-color: #ffffff;
 }
 
 .toolbar-spacer {

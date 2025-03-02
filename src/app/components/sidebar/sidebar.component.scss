@@ -12,6 +12,13 @@
 .sidebar-content {
   width: 260px;
   height: 100%;
+  background-color: var(--sidenav-bg-color, #ffffff);
+  color: var(--sidenav-text-color, rgba(0, 0, 0, 0.87));
+
+  :host-context(.dark) & {
+    --sidenav-bg-color: #424242;
+    --sidenav-text-color: #ffffff;
+  }
 }
 
 .user-info {

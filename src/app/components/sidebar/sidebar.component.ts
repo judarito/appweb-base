@@ -1,20 +1,20 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MenuComponent } from '../menu/menu.component';
+import { NavMenuComponent, NavMenuItem } from '../nav-menu/nav-menu.component';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [
     CommonModule,
-    MenuComponent
+    NavMenuComponent
   ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent {
   @Input() userEmail = '';
-  @Input() menuItems: any[] = [];
+  @Input() menuItems: NavMenuItem[] = [];
   @Output() navItemClick = new EventEmitter<void>();
   @Output() logoutClick = new EventEmitter<void>();
 }

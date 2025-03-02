@@ -45,4 +45,13 @@ export class LoginService {
   isAuthenticated(): boolean {
     return this.authStateSubject.value;
   }
+
+  getUser() {
+    return this.supabaseService.supabaseClient.auth.getUser();
+  }
+
+  async getEmail(): Promise<string> {
+    const { data: { user }, error } = await this.getUser();
+    return user?.email || '';
+  }
 }

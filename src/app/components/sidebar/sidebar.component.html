@@ -4,9 +4,9 @@
     <div class="user-email">{{userEmail}}</div>
   </div>
   
-  <app-menu 
+  <app-nav-menu 
     [menuItems]="menuItems"
     (navItemClick)="navItemClick.emit()"
     (logoutClick)="logoutClick.emit()">
-  </app-menu>
+  </app-nav-menu>
 </div>

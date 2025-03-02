@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { LoginService } from '../../services/login.service';
 import { HeaderComponent } from '../../components/header/header.component';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { NavMenuItem } from '../../components/nav-menu/nav-menu.component';
 
 @Component({
   selector: 'app-app-layout',
@@ -50,26 +51,19 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
   styles: [`
     :host {
       display: block;
-      height: 100%;
+      height: 100vh;
     }
 
     .app-container {
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      background-color: var(--mat-app-background-color);
-      color: var(--mat-app-text-color);
+      height: 100%;
+      background-color: var(--app-bg-color, #f5f5f5);
+      color: var(--app-text-color, rgba(0, 0, 0, 0.87));
 
       &.dark {
-        --mat-app-background-color: #303030;
-        --mat-app-text-color: #ffffff;
-        --mat-toolbar-container-background-color: #424242;
-        --mat-toolbar-container-text-color: #ffffff;
-        --mat-sidenav-container-background-color: #303030;
-        --mat-sidenav-container-text-color: #ffffff;
-        --primary-color: #7b1fa2;
-        --primary-lighter: rgba(123, 31, 162, 0.2);
-        --warn-color: #f44336;
+        --app-bg-color: #303030;
+        --app-text-color: #ffffff;
       }
     }
 
@@ -77,49 +71,47 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
       flex: 1;
       margin-top: 64px;
 
-      &.mobile {
+      @media (max-width: 599px) {
         margin-top: 56px;
       }
     }
 
     .sidenav {
-      border-right: none;
-      box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+      width: 250px;
+      background-color: var(--sidenav-bg-color, #ffffff);
+      border-right: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
 
-      &.mobile {
-        width: 85%;
-        max-width: 300px;
+      :host-context(.dark) & {
+        --sidenav-bg-color: #424242;
+        --border-color: rgba(255, 255, 255, 0.12);
       }
+    }
+
+    .main-content {
+      background-color: inherit;
     }
 
     .content {
-      padding: 20px;
-      min-height: calc(100vh - 64px);
-      box-sizing: border-box;
-
+      padding: 24px;
+      
       &.mobile {
-        min-height: calc(100vh - 56px);
         padding: 16px;
       }
     }
-
-    @media (max-width: 599px) {
-      .content-shifted {
-        margin-left: 0;
-      }
-    }
-  `],
+  `]
 })
 export class AppLayoutComponent implements OnInit {
   @ViewChild('sidenav') sidenav!: MatSidenav;
-  isOpen = true;
-  isMobile = false;
+  
   isDarkMode$: Observable<boolean>;
-  userEmail = 'user@example.com';
+  isMobile = window.innerWidth < 768;
+  isOpen = true;
+  userEmail = '';
 
-  menuItems = [
+  menuItems: NavMenuItem[] = [
     { route: '/app', icon: 'dashboard', label: 'Dashboard' },
     { route: '/app/roles', icon: 'admin_panel_settings', label: 'Roles' },
+    { route: '/app/menus', icon: 'menu', label: 'Menus' },
     { route: '/app/profile', icon: 'person', label: 'Profile' },
     { route: '/app/settings', icon: 'settings', label: 'Settings' }
   ];
@@ -129,15 +121,18 @@ export class AppLayoutComponent implements OnInit {
     private loginService: LoginService
   ) {
     this.isDarkMode$ = this.themeService.isDarkMode$;
-  }
+    this.loadUserEmail();
 
-  ngOnInit() {
-    // Check if mobile based on screen width
-    this.isMobile = window.innerWidth < 768;
     window.addEventListener('resize', () => {
       this.isMobile = window.innerWidth < 768;
     });
   }
+
+  async loadUserEmail() {
+    this.userEmail = await this.loginService.getEmail();
+  }
+
+  ngOnInit() {}
 
   toggleSidenav() {
     this.sidenav.toggle();
@@ -149,11 +144,11 @@ export class AppLayoutComponent implements OnInit {
 
   onNavItemClick() {
     if (this.isMobile) {
-      this.toggleSidenav();
+      this.sidenav.close();
     }
   }
 
-  async logout() {
-    await this.loginService.logout();
+  logout() {
+    this.loginService.logout();
   }
 }
