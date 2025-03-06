@@ -106,46 +106,56 @@ export class RolesComponent implements OnInit {
     if (this.roleForm.valid) {
       const roleData = this.roleForm.value;
       
-      const request = this.editingRole
-        ? this.rolesService.updateRole(this.editingRole.id, roleData)
-        : this.rolesService.createRole(roleData);
-
-      request.subscribe({
-        next: () => {
-          this.snackBar.open(
-            `Role ${this.editingRole ? 'updated' : 'created'} successfully`,
-            'Close',
-            { duration: 3000 }
-          );
-          this.dialogRef.close();
-          this.loadRoles();
-        },
-        error: (error: HttpErrorResponse) => {
-          this.snackBar.open(
-            `Error ${this.editingRole ? 'updating' : 'creating'} role`,
-            'Close',
-            { duration: 3000 }
-          );
-        }
-      });
+      if (!this.editingRole || !this.editingRole.id) {
+        // Create new role
+        this.rolesService.createRole(roleData).subscribe({
+          next: () => {
+            this.snackBar.open('Role created successfully', 'Close', { duration: 3000 });
+            this.loadRoles();
+            this.dialogRef.close();
+          },
+          error: (error) => {
+            this.snackBar.open('Error creating role', 'Close', { duration: 3000 });
+            console.error('Error creating role:', error);
+          }
+        });
+      } else {
+        // Update existing role
+        this.rolesService.updateRole(this.editingRole.id, roleData).subscribe({
+          next: () => {
+            this.snackBar.open('Role updated successfully', 'Close', { duration: 3000 });
+            this.loadRoles();
+            this.dialogRef.close();
+          },
+          error: (error) => {
+            this.snackBar.open('Error updating role', 'Close', { duration: 3000 });
+            console.error('Error updating role:', error);
+          }
+        });
+      }
     }
   }
 
   confirmDelete(role: Role) {
     if (confirm(`Are you sure you want to delete the role "${role.name}"?`)) {
-      this.deleteRole(role.id);
+      this.deleteRole(role);
     }
   }
 
-  private deleteRole(id: number) {
-    this.rolesService.deleteRole(id).subscribe({
-      next: () => {
-        this.snackBar.open('Role deleted successfully', 'Close', { duration: 3000 });
-        this.loadRoles();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.snackBar.open('Error deleting role', 'Close', { duration: 3000 });
-      }
-    });
+  deleteRole(role: Role): void {
+    if (!role.id) return;
+    
+    if (confirm(`¿Está seguro de que desea eliminar el rol "${role.name}"?`)) {
+      this.rolesService.deleteRole(role.id!).subscribe({
+        next: () => {
+          this.snackBar.open('Role deleted successfully', 'Close', { duration: 3000 });
+          this.loadRoles();
+        },
+        error: (error) => {
+          this.snackBar.open('Error deleting role', 'Close', { duration: 3000 });
+          console.error('Error deleting role:', error);
+        }
+      });
+    }
   }
 }

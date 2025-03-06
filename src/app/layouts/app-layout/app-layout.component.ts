@@ -111,6 +111,7 @@ export class AppLayoutComponent implements OnInit {
   menuItems: NavMenuItem[] = [
     { route: '/app', icon: 'dashboard', label: 'Dashboard' },
     { route: '/app/roles', icon: 'admin_panel_settings', label: 'Roles' },
+    { route: '/app/users', icon: 'people', label: 'Usuarios' },
     { route: '/app/menus', icon: 'menu', label: 'Menus' },
     { route: '/app/profile', icon: 'person', label: 'Profile' },
     { route: '/app/settings', icon: 'settings', label: 'Settings' }

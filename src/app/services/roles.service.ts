@@ -2,11 +2,13 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, from as rxFrom } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { SupabaseService } from './supabase.service';
+import { LoginService } from './login.service';
 
 export interface Role {
-  id: number;
+  id?: number;
   name: string;
   description: string;
+  id_contrato: number;
 }
 
 export interface PagedResult<T> {
@@ -29,20 +31,32 @@ export class RolesService {
 
   roles$ = this.rolesSubject.asObservable();
 
-  constructor(private supabaseService: SupabaseService) {}
+  constructor(private supabaseService: SupabaseService, private loginService: LoginService) {}
 
   getRoles(pageIndex: number = 0, pageSize: number = 10): Observable<PagedResult<Role>> {
     const startIndex = pageIndex * pageSize;
     const endIndex = startIndex + pageSize - 1;
+    const contractId = this.loginService.getContractId();
+
+    if (!contractId) {
+      throw new Error('No contract ID available');
+    }
 
     return rxFrom(
-      this.supabaseService.supabaseClient
-        .from('roles')
-        .select('*', { count: 'exact' })
-        .range(startIndex, endIndex)
-        .order('id', { ascending: true })
+      Promise.all([
+        this.supabaseService.supabaseClient
+          .from('roles')
+          .select('*', { count: 'exact' })
+          .eq('id_contrato', contractId)
+          .range(startIndex, endIndex)
+          .order('id', { ascending: true }),
+        this.supabaseService.supabaseClient
+          .from('roles')
+          .select('*', { count: 'exact' })
+          .eq('id_contrato', contractId)
+      ])
     ).pipe(
-      map(({ data, error, count }) => {
+      map(([{ data, error }, { count }]) => {
         if (error) throw error;
         
         return {
@@ -55,11 +69,17 @@ export class RolesService {
     );
   }
 
-  createRole(role: Omit<Role, 'id'>): Observable<Role> {
+  createRole(role: Omit<Role, 'id' | 'id_contrato'>): Observable<Role> {
+    const contractId = this.loginService.getContractId();
+
+    if (!contractId) {
+      throw new Error('No contract ID available');
+    }
+
     return rxFrom(
       this.supabaseService.supabaseClient
         .from('roles')
-        .insert([role])
+        .insert([{ ...role, id_contrato: contractId }])
         .select()
         .single()
     ).pipe(
@@ -70,12 +90,19 @@ export class RolesService {
     );
   }
 
-  updateRole(id: number, role: Partial<Role>): Observable<Role> {
+  updateRole(id: number, role: Partial<Omit<Role, 'id' | 'id_contrato'>>): Observable<Role> {
+    const contractId = this.loginService.getContractId();
+
+    if (!contractId) {
+      throw new Error('No contract ID available');
+    }
+
     return rxFrom(
       this.supabaseService.supabaseClient
         .from('roles')
         .update(role)
         .eq('id', id)
+        .eq('id_contrato', contractId)
         .select()
         .single()
     ).pipe(
@@ -87,11 +114,18 @@ export class RolesService {
   }
 
   deleteRole(id: number): Observable<void> {
+    const contractId = this.loginService.getContractId();
+
+    if (!contractId) {
+      throw new Error('No contract ID available');
+    }
+
     return rxFrom(
       this.supabaseService.supabaseClient
         .from('roles')
         .delete()
         .eq('id', id)
+        .eq('id_contrato', contractId)
     ).pipe(
       map(({ error }) => {
         if (error) throw error;

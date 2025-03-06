@@ -30,13 +30,18 @@ export class MenuService {
     const endIndex = startIndex + pageSize - 1;
 
     return rxFrom(
-      this.supabaseService.supabaseClient
-        .from('menus')
-        .select('*', { count: 'exact' })
-        .range(startIndex, endIndex)
-        .order('order', { ascending: true })
+      Promise.all([
+        this.supabaseService.supabaseClient
+          .from('menus')
+          .select('*', { count: 'exact' })
+          .range(startIndex, endIndex)
+          .order('order', { ascending: true }),
+        this.supabaseService.supabaseClient
+          .from('menus')
+          .select('*', { count: 'exact' })
+      ])
     ).pipe(
-      map(({ data, error, count }) => {
+      map(([{ data, error }, { count }]) => {
         if (error) throw error;
         
         return {
@@ -98,12 +103,12 @@ export class MenuService {
       this.supabaseService.supabaseClient
         .from('menus')
         .select('*')
-        .is('parent_id', null)
+        .is('parend_id', null)
         .order('order', { ascending: true })
     ).pipe(
       map(({ data, error }) => {
         if (error) throw error;
-        return data as Menu[];
+        return data || [];
       })
     );
   }
