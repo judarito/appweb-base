@@ -1,47 +1,62 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule } from '@angular/material/table';
-import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { PageEvent } from '@angular/material/paginator';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { CommonModule } from '@angular/common';
-import { UsersService, User } from '../../services/users.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { UsersService, User, PagedResult } from '../../services/users.service';
 import { LoginService } from '../../services/login.service';
+import { DataTableComponent, TableColumn } from '../../shared/components/data-table/data-table.component';
 
 @Component({
   selector: 'app-users',
-  templateUrl: './users.component.html',
-  styleUrls: ['./users.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule,
-    MatTableModule,
-    MatIconModule,
-    MatPaginatorModule
-  ]
+    ReactiveFormsModule,
+    FormsModule,
+    MatSnackBarModule,
+    MatPaginatorModule,
+    DataTableComponent
+  ],
+  templateUrl: './users.component.html',
+  styleUrls: ['./users.component.scss']
 })
 export class UsersComponent implements OnInit {
+  @ViewChild('dialogTemplate') dialogTemplate!: TemplateRef<any>;
+  
   users: User[] = [];
-  displayedColumns: string[] = ['id', 'nombre', 'email', 'actions'];
-  total = 0;
-  pageSize = 10;
-  currentPage = 1;
+  totalItems: number = 0;
+  pageSize: number = 10;
+  currentPage: number = 0;
+  
+  columns: TableColumn[] = [
+    { name: 'ID', property: 'id' },
+    { name: 'Nombre', property: 'nombre' },
+    { name: 'Email', property: 'email' },
+    { name: 'Actions', property: 'actions', isAction: true }
+  ];
+
   userForm: FormGroup;
-  isEditing = false;
   editingUser: User | null = null;
+  dialogRef: any;
 
   constructor(
     private usersService: UsersService,
     private loginService: LoginService,
     private formBuilder: FormBuilder,
+    private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {
     this.userForm = this.formBuilder.group({
@@ -57,52 +72,86 @@ export class UsersComponent implements OnInit {
 
   loadUsers(): void {
     this.usersService.getUsers(this.currentPage, this.pageSize).subscribe({
-      next: (response) => {
-        this.users = response.data;
-        this.total = response.total;
+      next: (result: PagedResult<User>) => {
+        this.users = result.items;
+        this.totalItems = result.total;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error loading users:', error);
         this.snackBar.open('Error loading users', 'Close', { duration: 3000 });
       }
     });
   }
 
-  onSubmit(): void {
+  handlePageEvent(e: PageEvent): void {
+    this.currentPage = e.pageIndex;
+    this.pageSize = e.pageSize;
+    this.loadUsers();
+  }
+
+  openDialog(user?: User): void {
+    this.editingUser = user || null;
+    
+    if (user) {
+      this.userForm.patchValue({
+        nombre: user.nombre,
+        email: user.email
+      });
+      // Remove password validator for editing
+      this.userForm.get('password')?.clearValidators();
+      this.userForm.get('password')?.updateValueAndValidity();
+    } else {
+      this.userForm.reset();
+      // Restore password validator
+      this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+      this.userForm.get('password')?.updateValueAndValidity();
+    }
+    
+    this.dialogRef = this.dialog.open(this.dialogTemplate, {
+      width: '400px'
+    });
+
+    this.dialogRef.afterClosed().subscribe(() => {
+      this.editingUser = null;
+      this.userForm.reset();
+      // Restore password validator
+      this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+      this.userForm.get('password')?.updateValueAndValidity();
+    });
+  }
+
+  saveUser(): void {
     if (this.userForm.valid) {
       const userData = this.userForm.value;
-      const contractId = this.loginService.getContractId();
       
-      if (!contractId) {
-        this.snackBar.open('No contract ID available', 'Close', { duration: 3000 });
-        return;
-      }
-
-      const user: Omit<User, 'id'> = {
-        nombre: userData.nombre,
-        email: userData.email,
-        id_contrato: contractId
-      };
-
-      if (this.isEditing && this.editingUser?.id) {
+      if (this.editingUser) {
         // Update existing user
-        this.usersService.updateUser(this.editingUser.id, user).subscribe({
+        const updateData: Partial<User> = {
+          nombre: userData.nombre
+        };
+        
+        this.usersService.updateUser(this.editingUser.id!, updateData, userData.password || undefined).subscribe({
           next: () => {
             this.snackBar.open('User updated successfully', 'Close', { duration: 3000 });
-            this.resetForm();
+            this.dialogRef.close();
             this.loadUsers();
           },
-          error: (error) => {
+          error: (error: HttpErrorResponse) => {
             console.error('Error updating user:', error);
             this.snackBar.open('Error updating user', 'Close', { duration: 3000 });
           }
         });
       } else {
         // Create new user
-        this.usersService.createUser(user, userData.password).then(
+        const newUser: Omit<User, 'id' | 'id_contrato'> = {
+          nombre: userData.nombre,
+          email: userData.email
+        };
+        
+        this.usersService.createUser(newUser, userData.password).then(
           () => {
             this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
-            this.resetForm();
+            this.dialogRef.close();
             this.loadUsers();
           },
           (error) => {
@@ -114,44 +163,22 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  editUser(user: User): void {
-    this.isEditing = true;
-    this.editingUser = user;
-    this.userForm.patchValue({
-      nombre: user.nombre,
-      email: user.email
-    });
-    // Remove password validator for editing
-    this.userForm.get('password')?.clearValidators();
-    this.userForm.get('password')?.updateValueAndValidity();
-  }
-
-  deleteUser(user: User): void {
+  confirmDelete(user: User): void {
     if (confirm(`Are you sure you want to delete the user "${user.nombre}"?`)) {
-      this.usersService.deleteUser(user.id!).subscribe({
-        next: () => {
-          this.snackBar.open('User deleted successfully', 'Close', { duration: 3000 });
-          this.loadUsers();
-        },
-        error: (error) => {
-          console.error('Error deleting user:', error);
-          this.snackBar.open('Error deleting user', 'Close', { duration: 3000 });
-        }
-      });
+      this.deleteUser(user);
     }
   }
 
-  resetForm(): void {
-    this.isEditing = false;
-    this.editingUser = null;
-    this.userForm.reset();
-    // Restore password validator
-    this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
-    this.userForm.get('password')?.updateValueAndValidity();
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.loadUsers();
+  deleteUser(user: User): void {
+    this.usersService.deleteUser(user.id!, user.email).then(
+      () => {
+        this.snackBar.open('User deleted successfully', 'Close', { duration: 3000 });
+        this.loadUsers();
+      },
+      (error) => {
+        console.error('Error deleting user:', error);
+        this.snackBar.open('Error deleting user', 'Close', { duration: 3000 });
+      }
+    );
   }
 }

@@ -1,15 +1,26 @@
-.container {
+.users-container {
   padding: 20px;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 0;
+    }
+  }
 }
 
 .user-form {
   display: flex;
   flex-direction: column;
-  max-width: 500px;
-  margin-bottom: 20px;
-
+  min-width: 300px;
+  
   mat-form-field {
-    margin-bottom: 15px;
+    width: 100%;
+    margin-bottom: 10px;
   }
 }
 
